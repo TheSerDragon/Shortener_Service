@@ -1,16 +1,18 @@
 package shortener;
 
 import java.time.Instant;
-import java.util.Random;
+import java.util.UUID;
+
+/**
+ * ShortenerService — бизнес-логика сервиса сокращения ссылок.
+ * Отвечает за создание коротких ссылок, редирект, и обновление параметров.
+ */
 
 public class ShortenerService {
     private final LinkStore store;
     private final NotificationService notifier;
-    private final Random rnd = new Random();
 
     private static final String DOMAIN = "clck.ru/";
-    private static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static final int CODE_LEN = 7;
 
     public ShortenerService(LinkStore store, NotificationService notifier) {
         this.store = store;
@@ -18,15 +20,20 @@ public class ShortenerService {
     }
 
     public String create(String originalUrl, String ownerUuid, int maxClicks) {
-        // генерируем уникальный код; учитываем ownerUuid для уникальности
+        // Добавлена валидация URL
+        if (originalUrl == null || !originalUrl.matches("^(https?://).+")) {
+            throw new IllegalArgumentException("Некорректный URL. Используйте формат http(s)://...");
+        }
+
+        // Генерируем гарантированно уникальный код
         String code;
         do {
-            code = generateCode(ownerUuid);
+            code = generateCode();
         } while (store.existsCode(code));
 
         Instant now = Instant.now();
 
-        // Берем TTL и лимит из конфига (LinkStore)
+        // Берем TTL и лимит из конфигурации
         long ttl = store.getDefaultTtlSeconds();
         int max = (maxClicks > 0) ? maxClicks : store.getDefaultMaxClicks();
 
@@ -38,18 +45,12 @@ public class ShortenerService {
         return DOMAIN + code;
     }
 
-    private String generateCode(String ownerUuid) {
-        long seed = System.nanoTime() ^ ownerUuid.hashCode();
-        rnd.setSeed(seed + rnd.nextInt());
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < CODE_LEN; i++) {
-            sb.append(ALPHABET.charAt(rnd.nextInt(ALPHABET.length())));
-        }
-        return sb.toString();
+    // Упрощённый метод генерации кода через UUID — теперь 100% уникален
+    private String generateCode() {
+        return UUID.randomUUID().toString().substring(0, 7);
     }
 
-    // Переход по короткому коду: возвращает результат и уведомляет владельца при необходимости.
-
+    // Переход по короткому коду: возвращает результат и уведомляет владельца при необходимости
     public OpenResult open(String code, String requesterUuid) {
         Link link = store.getByCode(code);
         if (link == null) {

@@ -4,6 +4,10 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * LinkStore — хранилище ссылок, управляет добавлением, удалением и очисткой.
+ */
+
 public class LinkStore {
     private final ConcurrentHashMap<String, Link> byCode = new ConcurrentHashMap<>();
 

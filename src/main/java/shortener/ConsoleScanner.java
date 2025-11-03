@@ -5,6 +5,10 @@ import java.net.URI;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * ConsoleScanner — консольный интерфейс для работы с пользователем.
+ */
+
 public class ConsoleScanner {
     private final ShortenerService service;
     private final LinkStore store;
@@ -142,15 +146,18 @@ public class ConsoleScanner {
     }
 
     private void printHelp() {
-        System.out.println("Команды:");
-        System.out.println(" create <longUrl> [maxClicks]  - создать короткую ссылку (maxClicks по умолчанию 10)");
-        System.out.println(" list                          - вывести список ссылок");
-        System.out.println(" open <code|clck.ru/code>      - открыть короткую ссылку");
-        System.out.println(" delete <code>                 - удалить ссылку");
-        System.out.println(" stats <code>                  - показать статистику ссылок");
-        System.out.println(" update <code> ttl=[Seconds] max=[Clicks] - изменить TTL и/или лимит переходов (только владелец)");
-        System.out.println(" help                          - справка команд");
-        System.out.println(" exit                          - выход");
+        System.out.println("""
+        Доступные команды:
+          create <url> [maxClicks]     — создать короткую ссылку (пример: create https://example.com 10)
+          list                         — показать все ваши ссылки
+          open <code>                  — открыть ссылку по коду
+          delete <code>                — удалить ссылку по коду
+          stats <code>                 — показать статистику ссылок
+          update <code> max=<newMax>   — изменить лимит переходов
+          update <code> ttl=<seconds>  — обновить время жизни
+          help                         — показать эту справку
+          exit                         — выйти из программы
+        """);
     }
 
     private String extractCode(String arg) {
