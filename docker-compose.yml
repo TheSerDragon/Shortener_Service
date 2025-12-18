@@ -1,0 +1,6 @@
+version: '3'
+services:
+  dependency-track:
+    image: dependencytrack/dependency-track:latest
+    ports:
+      - "8080:8080"
