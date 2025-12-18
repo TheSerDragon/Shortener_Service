@@ -47,7 +47,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/src \
             -v ${{ github.workspace }}/dependency-check-data:/usr/share/dependency-check/data \
-            owasp/dependency-check:latest \
+            owasp/dependency-check:8.4.3 \
             --project "Shortener_Service" \
             --scan /src \
             --format HTML \
