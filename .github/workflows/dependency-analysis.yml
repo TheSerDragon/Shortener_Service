@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
+  # Этап генерации SBOM
   generate_sbom:
     runs-on: ubuntu-latest
     steps:
@@ -27,6 +28,7 @@ jobs:
           path: target/bom.xml
           retention-days: 7
 
+  # Этап анализа зависимостей через Dependency Check (без Docker)
   dependency_check:
     runs-on: ubuntu-latest
     needs: generate_sbom
@@ -50,6 +52,7 @@ jobs:
           path: dependency-check-report/dependency-check-report.html
           retention-days: 7
 
+  # Этап загрузки SBOM в Dependency Track
   upload_to_dependency_track:
     runs-on: ubuntu-latest
     needs: generate_sbom
