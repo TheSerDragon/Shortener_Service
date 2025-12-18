@@ -28,7 +28,6 @@ jobs:
           path: target/bom.xml
           retention-days: 7
 
-  # Этап анализа зависимостей с Dependency Check
   dependency_check:
     runs-on: ubuntu-latest
     needs: generate_sbom
@@ -36,28 +35,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Dependency Check
-        uses: owasp/dependency-check-action@v2
+      - name: Pull SBOM artifact
+        uses: actions/download-artifact@v4
         with:
-          project: Shortener_Service
-          scan: .
-          format: HTML
-          out: dependency-check-report
+          name: sbom
+          path: ./sbom
+
+      - name: Run OWASP Dependency Check via Docker
+        run: |
+          mkdir -p dependency-check-report
+          docker run --rm \
+            -v ${{ github.workspace }}:/src \
+            -v ${{ github.workspace }}/dependency-check-data:/usr/share/dependency-check/data \
+            owasp/dependency-check:latest \
+            --project "Shortener_Service" \
+            --scan /src \
+            --format HTML \
+            --out /src/dependency-check-report
 
       - name: Upload Dependency Check report
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: dependency-check-report/dependency-check-report.html
+          path: dependency-check-report
           retention-days: 7
 
-  # Этап загрузки SBOM в Dependency Track
   upload_to_dependency_track:
     runs-on: ubuntu-latest
     needs: generate_sbom
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Pull SBOM artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom
+          path: ./sbom
 
       - name: Upload BOM to Dependency Track
         env:
@@ -67,4 +81,4 @@ jobs:
           curl -X POST "$DT_URL/api/v1/bom" \
                -H "X-Api-Key: $DT_API_KEY" \
                -F "projectName=Shortener_Service" \
-               -F "bom=@target/bom.xml"
+               -F "bom=@./sbom/bom.xml"
